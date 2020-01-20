@@ -576,8 +576,11 @@ void Emulator::readLCDIntoBuffer(uint8_t **lines, bool is32BitOutput) const {
 		int bpp = 1 << (lcdBuf[1] >> 4);
 		int ppb = 8 / bpp;
 
+        //Hack: On startup, it seems that the LCD buffer is not initialised yet?
+        //We get divide by zero exceptions.
         if(ppb == 0 || bpp == 0)
             return;
+        //End hack.
 
 		uint16_t palette[16];
 		for (int i = 0; i < 16; i++)
