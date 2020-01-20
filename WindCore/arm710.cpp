@@ -808,8 +808,8 @@ MaybeU32 ARM710::virtToPhys(uint32_t virtAddr) {
 
 	TlbEntry tempEntry;
 	auto translated = translateAddressUsingTlb(virtAddr, &tempEntry);
-	if (holds_alternative<TlbEntry *>(translated)) {
-		auto tlbEntry = get<TlbEntry *>(translated);
+        if (std::holds_alternative<TlbEntry *>(translated)) {
+                auto tlbEntry = std::get<TlbEntry *>(translated);
 		return physAddrFromTlbEntry(tlbEntry, virtAddr);
 	} else {
 		return MaybeU32();
@@ -825,7 +825,7 @@ MaybeU32 ARM710::readVirtualDebug(uint32_t virtAddr, ValueSize valueSize) {
 }
 
 
-pair<MaybeU32, ARM710::MMUFault> ARM710::readVirtual(uint32_t virtAddr, ValueSize valueSize) {
+std::pair<MaybeU32, ARM710::MMUFault> ARM710::readVirtual(uint32_t virtAddr, ValueSize valueSize) {
 	if (isAlignmentFaultEnabled() && valueSize == V32 && virtAddr & 3)
 		return make_pair(MaybeU32(), encodeFault(AlignmentFault, 0, virtAddr));
 
@@ -838,20 +838,20 @@ pair<MaybeU32, ARM710::MMUFault> ARM710::readVirtual(uint32_t virtAddr, ValueSiz
 	if (!isMMUEnabled()) {
 		// things are very simple without a MMU
 		if (auto v = readPhysical(virtAddr, valueSize); v.has_value())
-			return make_pair(v.value(), NoFault);
+                        return std::make_pair(v.value(), NoFault);
 		else
-			return make_pair(MaybeU32(), encodeFault(NonMMUError, 0, virtAddr));
+                        return std::make_pair(MaybeU32(), encodeFault(NonMMUError, 0, virtAddr));
 	}
 
 	auto translated = translateAddressUsingTlb(virtAddr);
-	if (holds_alternative<MMUFault>(translated))
-		return make_pair(MaybeU32(), get<MMUFault>(translated));
+        if (std::holds_alternative<MMUFault>(translated))
+                return std::make_pair(MaybeU32(), std::get<MMUFault>(translated));
 
 	// resolve this boy
-	auto tlbEntry = get<TlbEntry *>(translated);
+        auto tlbEntry = std::get<TlbEntry *>(translated);
 
 	if (auto f = checkAccessPermissions(tlbEntry, virtAddr, false); f != NoFault)
-		return make_pair(MaybeU32(), f);
+                return std::make_pair(MaybeU32(), f);
 
 	int domain = (tlbEntry->lv1Entry >> 5) & 0xF;
 	bool isPage = (tlbEntry->lv2Entry != 0);
@@ -880,11 +880,11 @@ ARM710::MMUFault ARM710::writeVirtual(uint32_t value, uint32_t virtAddr, ValueSi
 			return encodeFault(NonMMUError, 0, virtAddr);
 	} else {
 		auto translated = translateAddressUsingTlb(virtAddr);
-		if (holds_alternative<MMUFault>(translated))
-			return get<MMUFault>(translated);
+                if (std::holds_alternative<MMUFault>(translated))
+                        return std::get<MMUFault>(translated);
 
 		// resolve this boy
-		auto tlbEntry = get<TlbEntry *>(translated);
+                auto tlbEntry = std::get<TlbEntry *>(translated);
 
 		if (auto f = checkAccessPermissions(tlbEntry, virtAddr, true); f != NoFault)
 			return f;
@@ -934,7 +934,7 @@ ARM710::TlbEntry *ARM710::_allocateTlbEntry(uint32_t addrMask, uint32_t addr) {
 	return entry;
 }
 
-variant<ARM710::TlbEntry *, ARM710::MMUFault> ARM710::translateAddressUsingTlb(uint32_t virtAddr, TlbEntry *useMe) {
+std::variant<ARM710::TlbEntry *, ARM710::MMUFault> ARM710::translateAddressUsingTlb(uint32_t virtAddr, TlbEntry *useMe) {
 #ifdef ARM710T_TLB
 	// first things first, do we have a matching entry in the TLB?
 	for (TlbEntry &e : tlb) {

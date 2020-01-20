@@ -2,8 +2,9 @@
 #include <stdint.h>
 #include <optional>
 #include <variant>
+#include <functional>
 
-using namespace std;
+//using namespace std;
 
 // Everything I thought is a lie.
 // Turns out the 5mx/Windermere is an ARM710T, not an ARM710a.
@@ -20,7 +21,7 @@ using namespace std;
 //#define ARM710T_CACHE
 //#define ARM710T_TLB
 
-typedef optional<uint32_t> MaybeU32;
+typedef std::optional<uint32_t> MaybeU32;
 
 class ARM710
 {
@@ -106,7 +107,7 @@ public:
 	MaybeU32 readVirtualDebug(uint32_t virtAddr, ValueSize valueSize);
 	MaybeU32 virtToPhys(uint32_t virtAddr);
 
-	pair<MaybeU32, MMUFault> readVirtual(uint32_t virtAddr, ValueSize valueSize);
+    std::pair<MaybeU32, MMUFault> readVirtual(uint32_t virtAddr, ValueSize valueSize);
 	virtual MaybeU32 readPhysical(uint32_t physAddr, ValueSize valueSize) = 0;
 	MMUFault writeVirtual(uint32_t value, uint32_t virtAddr, ARM710::ValueSize valueSize);
 	virtual bool writePhysical(uint32_t value, uint32_t physAddr, ARM710::ValueSize valueSize) = 0;
@@ -255,7 +256,7 @@ private:
 #endif	
 
 	TlbEntry *_allocateTlbEntry(uint32_t addrMask, uint32_t addr);
-	variant<TlbEntry *, MMUFault> translateAddressUsingTlb(uint32_t virtAddr, TlbEntry *useMe=nullptr);
+    std::variant<TlbEntry *, MMUFault> translateAddressUsingTlb(uint32_t virtAddr, TlbEntry *useMe=nullptr);
 	static uint32_t physAddrFromTlbEntry(TlbEntry *tlbEntry, uint32_t virtAddr);
 	MMUFault checkAccessPermissions(TlbEntry *entry, uint32_t virtAddr, bool isWrite) const;
 
