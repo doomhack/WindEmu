@@ -575,6 +575,10 @@ void Emulator::readLCDIntoBuffer(uint8_t **lines, bool is32BitOutput) const {
 		// fetch palette
 		int bpp = 1 << (lcdBuf[1] >> 4);
 		int ppb = 8 / bpp;
+
+        if(ppb == 0 || bpp == 0)
+            return;
+
 		uint16_t palette[16];
 		for (int i = 0; i < 16; i++)
 			palette[i] = lcdBuf[i*2] | ((lcdBuf[i*2+1] << 8) & 0xF00);
